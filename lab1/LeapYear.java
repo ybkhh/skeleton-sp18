@@ -2,7 +2,7 @@
  *  @author YOUR NAME HERE
  */
 public class LeapYear {
-dwdw
+
     /** Calls isLeapYear to print correct statement.
      *  @param  year to be analyzed
      */
