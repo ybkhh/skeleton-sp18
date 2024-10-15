@@ -43,6 +43,7 @@ public class NBody{
             yforce[i]=calcNetForceExertedByY(planets);
         
         }
+        
         for (int i=0;i<num;num++){
            planets[i].update(dt, xforce[i], yforce[i]);
         
