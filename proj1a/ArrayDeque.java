@@ -49,8 +49,8 @@ public int size (){
  }
  public T removeFirst(){
      T val=array[head];
-     array[head]=null;
-     head=minusOne(head);
+    // array[head]=null;
+     head=  PlusOne(head);
      size--;
      return val ;
 
@@ -61,7 +61,8 @@ public int size (){
  }
  public  T removeLast(){
      T val=array[minusOne(tail)];
-     array[minusOne(tail)]=null;
+     //array[minusOne(tail)]=null;并不需要user不关心底层实现
+     tail=minusOne(tail);
      size--;
      return  val;
  }
@@ -85,7 +86,7 @@ public int size (){
 
     }
 
-
+    
 
 
 }
