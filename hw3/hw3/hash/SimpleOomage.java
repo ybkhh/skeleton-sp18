@@ -15,21 +15,28 @@ public class SimpleOomage implements Oomage {
     @Override
     public boolean equals(Object o) {
         // TODO: Write this method.
-        return false;
+        if(o==this){return true;
+        }
+        if (! (o instanceof SimpleOomage)){return false;}
+        SimpleOomage O =(SimpleOomage) o;
+        return O.red==this.red&&O.green==this.green&&O.blue==this.blue;
+
+
     }
 
-    /* Uncomment this method after you've written
-       equals and failed the testHashCodeAndEqualsConsistency
-       test.
+
     @Override
     public int hashCode() {
         if (!USE_PERFECT_HASH) {
             return red + green + blue;
         } else {
             // TODO: Write a perfect hash function for Simple Oomages.
-            return 0;
+            int rgb=red/5;
+            rgb=rgb+green/5*10;
+            rgb=rgb+blue/5*100;
+            return rgb;
         }
-    }*/
+    }
 
     public SimpleOomage(int r, int g, int b) {
         if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {

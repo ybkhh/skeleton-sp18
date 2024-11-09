@@ -41,7 +41,8 @@ public class MazeDepthFirstPaths extends MazeExplorer {
                 edgeTo[w] = v;
                 announce();
                 distTo[w] = distTo[v] + 1;
-                dfs(w);
+                dfs(w);//递归调用
+
                 if (targetFound) {
                     return;
                 }

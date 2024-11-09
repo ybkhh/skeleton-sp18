@@ -1,5 +1,7 @@
 package lab9;
 
+import com.sun.security.auth.UnixNumericUserPrincipal;
+
 import java.util.Iterator;
 import java.util.Set;
 
@@ -16,6 +18,11 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
 
     private ArrayMap<K, V>[] buckets;
     private int size;
+
+    public MyHashMap(int i) {
+        buckets = new ArrayMap[i];
+        this.clear();
+    }
 
     private int loadFactor() {
         return size / buckets.length;
@@ -53,19 +60,38 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
      */
     @Override
     public V get(K key) {
-        throw new UnsupportedOperationException();
+        int module=hash(key);
+       return buckets[module].get(key);
+
     }
 
     /* Associates the specified value with the specified key in this map. */
     @Override
     public void put(K key, V value) {
-        throw new UnsupportedOperationException();
+        int module=hash(key);
+        buckets[module].put(key,value);
+        int numBucket = buckets.length;
+
+       if (loadFactor()>MAX_LF){
+           resize();
+       }
+
+
+
     }
+   public void resize() {
+       MyHashMap newmap = new MyHashMap(buckets.length * 2);
+       for (K key : this.keySet()) {newmap.put(key,this.get(key));
+
+       }
+       this.size = newmap.size;
+       this.buckets = newmap.buckets;//更改instance中的size和buckets
+   }
 
     /* Returns the number of key-value mappings in this map. */
     @Override
     public int size() {
-        throw new UnsupportedOperationException();
+       return size;//每次arraymap的put操作，size会加
     }
 
     //////////////// EVERYTHING BELOW THIS LINE IS OPTIONAL ////////////////

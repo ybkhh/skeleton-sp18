@@ -2,9 +2,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  *  Parses OSM XML files using an XML SAX parser. Used to construct the graph of roads for
@@ -38,29 +36,66 @@ public class GraphBuildingHandler extends DefaultHandler {
                     "secondary_link", "tertiary_link"));
     private String activeState = "";
     private final GraphDB g;
+    HashMap<String, node> record_node_id = new HashMap<>();
+
+    private  boolean isvalid=false;
+    Queue<String> nodes_in_road=new LinkedList<>();
+
+
+
 
     /**
      * Create a new GraphBuildingHandler.
+     *
      * @param g The graph to populate with the XML data.
      */
     public GraphBuildingHandler(GraphDB g) {
         this.g = g;
     }
+/*漏看了规范node 和 edge应该在graphdb中实现，而不是自己创建，但这不是无意义的，通过分解问题写小的函数可以帮助理解
+    whats going on here */
+    private class node {
+        private double lat;
+        private double lon;
+
+        public node(double lat, double lon) {
+            this.lat = lat;
+            this.lon = lon;
+
+
+        }
+
+        }
+        private  class edge{
+        private node start;
+        private  node end;
+        public edge(node start,node end){
+            this.start=start;
+            this.end=end;
+        }
+
+        }
+
+
+
+
 
     /**
      * Called at the beginning of an element. Typically, you will want to handle each element in
      * here, and you may want to track the parent element.
-     * @param uri The Namespace URI, or the empty string if the element has no Namespace URI or
-     *            if Namespace processing is not being performed.
-     * @param localName The local name (without prefix), or the empty string if Namespace
-     *                  processing is not being performed.
-     * @param qName The qualified name (with prefix), or the empty string if qualified names are
-     *              not available. This tells us which element we're looking at.
+     *
+     * @param uri        The Namespace URI, or the empty string if the element has no Namespace URI or
+     *                   if Namespace processing is not being performed.
+     * @param localName  The local name (without prefix), or the empty string if Namespace
+     *                   processing is not being performed.
+     * @param qName      The qualified name (with prefix), or the empty string if qualified names are
+     *                   not available. This tells us which element we're looking at.
      * @param attributes The attributes attached to the element. If there are no attributes, it
      *                   shall be an empty Attributes object.
      * @throws SAXException Any SAX exception, possibly wrapping another exception.
      * @see Attributes
      */
+
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
@@ -68,11 +103,15 @@ public class GraphBuildingHandler extends DefaultHandler {
         if (qName.equals("node")) {
             /* We encountered a new <node...> tag. */
             activeState = "node";
-//            System.out.println("Node id: " + attributes.getValue("id"));
-//            System.out.println("Node lon: " + attributes.getValue("lon"));
-//            System.out.println("Node lat: " + attributes.getValue("lat"));
+           System.out.println("Node id: " + attributes.getValue("id"));
+            System.out.println("Node lon: " + attributes.getValue("lon"));
+            System.out.println("Node lat: " + attributes.getValue("lat"));
 
             /* TODO Use the above information to save a "node" to somewhere. */
+            node waiting_node = new node(Double.parseDouble(attributes.getValue("lat")), Double.parseDouble(attributes.getValue("lon")));
+            record_node_id.put(attributes.getValue("id"), waiting_node);
+
+
             /* Hint: A graph-like structure would be nice. */
 
         } else if (qName.equals("way")) {
@@ -82,6 +121,8 @@ public class GraphBuildingHandler extends DefaultHandler {
         } else if (activeState.equals("way") && qName.equals("nd")) {
             /* While looking at a way, we found a <nd...> tag. */
             //System.out.println("Id of a node in this way: " + attributes.getValue("ref"));
+            nodes_in_road.add(attributes.getValue("ref"));
+
 
             /* TODO Use the above id to make "possible" connections between the nodes in this way */
             /* Hint1: It would be useful to remember what was the last node in this way. */
@@ -97,10 +138,13 @@ public class GraphBuildingHandler extends DefaultHandler {
             if (k.equals("maxspeed")) {
                 //System.out.println("Max Speed: " + v);
                 /* TODO set the max speed of the "current way" here. */
+
             } else if (k.equals("highway")) {
                 //System.out.println("Highway type: " + v);
                 /* TODO Figure out whether this way and its connections are valid. */
                 /* Hint: Setting a "flag" is good enough! */
+                isvalid=true;
+
             } else if (k.equals("name")) {
                 //System.out.println("Way Name: " + v);
             }
@@ -119,13 +163,14 @@ public class GraphBuildingHandler extends DefaultHandler {
     /**
      * Receive notification of the end of an element. You may want to take specific terminating
      * actions here, like finalizing vertices or edges found.
-     * @param uri The Namespace URI, or the empty string if the element has no Namespace URI or
-     *            if Namespace processing is not being performed.
+     *
+     * @param uri       The Namespace URI, or the empty string if the element has no Namespace URI or
+     *                  if Namespace processing is not being performed.
      * @param localName The local name (without prefix), or the empty string if Namespace
      *                  processing is not being performed.
-     * @param qName The qualified name (with prefix), or the empty string if qualified names are
-     *              not available.
-     * @throws SAXException  Any SAX exception, possibly wrapping another exception.
+     * @param qName     The qualified name (with prefix), or the empty string if qualified names are
+     *                  not available.
+     * @throws SAXException Any SAX exception, possibly wrapping another exception.
      */
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
@@ -134,7 +179,33 @@ public class GraphBuildingHandler extends DefaultHandler {
             /* Hint1: If you have stored the possible connections for this way, here's your
             chance to actually connect the nodes together if the way is valid. */
 //            System.out.println("Finishing a way...");
-        }
-    }
+            //用三个指针访问数组元素 edgefrom cur edgeto 直到cur循环到数组尾部，一开始 node edgefrom为null，if ,为线性关系；
+        if (isvalid){
+            node pre=null;
+            while(!nodes_in_road.isEmpty()){
+                String cur_id=nodes_in_road.poll();
+                node cur =record_node_id.get(cur_id);
+                String next_id=nodes_in_road.peek();
+                node next=record_node_id.get(next_id);
+                edge new_edge=new edge(cur,next);
 
+
+
+
+
+
+
+
+
+
+
+            }
+            isvalid=false;
+            nodes_in_road.clear();
+
+        }
+
+        }
+
+    }
 }

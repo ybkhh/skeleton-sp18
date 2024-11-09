@@ -7,6 +7,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Graph for storing all of the intersection (vertex) and road (edge) information.
@@ -26,6 +27,14 @@ public class GraphDB {
      * You do not need to modify this constructor, but you're welcome to do so.
      * @param dbPath Path to the XML file to be parsed.
      */
+    static class Node{
+        long id;
+        double lon;
+        double lat;
+
+
+
+    }
     public GraphDB(String dbPath) {
         try {
             File inputFile = new File(dbPath);
@@ -41,6 +50,8 @@ public class GraphDB {
         }
         clean();
     }
+
+
 
     /**
      * Helper to process strings into their "cleaned" form, ignoring punctuation and capitalization.
